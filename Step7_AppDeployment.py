@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import simpledialog
 from tkinter import ttk
+import matplotlib.pyplot as plt
 
 def feature_extraction(data, window_size):
     filtered_data = []
@@ -41,6 +42,15 @@ def acquire_name():
     file_name = simpledialog.askstring("Output File", "Enter output CSV file name:")
     return file_name
 
+def plot_results(output_data):
+    output_data['activity_code'] = output_data['activity'].replace({'walking': 0, 'jumping': 1})
+    plt.plot(output_data['activity_code'])
+    plt.yticks([0, 1], ['walking', 'jumping'])
+    plt.xlabel('Window')
+    plt.ylabel('Activity')
+    plt.title('Activity Recognition Results')
+    plt.show()
+
 def process_data():
     # Acquire input file path and output file name
     input_file_path = acquire_path()
@@ -68,6 +78,9 @@ def process_data():
     output_data.to_csv(output_file_name, index=False)
 
     result_label.config(text=f'Result saved to: {output_file_name}')
+
+    # Plot the results
+    plot_results(output_data)
 
 # Create the main window
 root = tk.Tk()
