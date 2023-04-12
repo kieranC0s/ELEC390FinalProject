@@ -114,7 +114,7 @@
 #
 # f.close()
 
-
+import h5py 
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -157,12 +157,34 @@ def data_filter(data, window_size):
         filtered_data.append(np.column_stack(padded_sample_data))
 
     return np.array(filtered_data)
+
+
+
+def prepare_filtered_data_train(train_walking_data, train_jumping_data):
+    train_walking_data['label'] = 0
+    train_jumping_data['label'] = 1
+    
+
+
+    return pd.concat([train_walking_data, train_jumping_data], axis=0)
+
+
+def prepare_filtered_data_test(test_walking_data, test_jumping_data):
+   
+    test_walking_data['label'] = 0
+    test_jumping_data['label'] = 1
+
+
+    return pd.concat([test_walking_data, test_jumping_data], axis=0)
+   
+
 f = h5py.File('data.h5', 'r')
+
 # Load the walking and jumping data from CSV files
-train_walking_data = pd.read_csv('dataset/Test/Jumping')
-train_jumping_data = pd.read_csv('train_jumping_data.csv')
-test_walking_data = pd.read_csv('test_walking_data.csv')
-test_jumping_data = pd.read_csv('test_jumping_data.csv')
+train_walking_data = f[f'dataset/Train']['Walking'][:]
+train_jumping_data = f[f'dataset/Train']['Jumping'][:]
+test_walking_data = f[f'dataset/Test']['Walking'][:]
+test_jumping_data = f[f'dataset/Test']['Jumping'][:]
 
 # Filter the walking and jumping data using the data_filter function with a specified window size
 window_size = 5
@@ -171,36 +193,10 @@ jumping_filtered_train = data_filter(train_jumping_data, window_size)
 walking_filtered_test = data_filter(test_walking_data, window_size)
 jumping_filtered_test = data_filter(test_jumping_data, window_size)
 
-# Save the filtered data to CSV files
-np.savetxt("walking_filtered_train.csv", walking_filtered_train, delimiter=",")
-np.savetxt("jumping_filtered_train.csv", jumping_filtered_train, delimiter=",")
-np.savetxt("walking_filtered_test.csv", walking_filtered_test, delimiter=",")
-np.savetxt("jumping_filtered_test.csv", jumping_filtered_test, delimiter=",")
-
-def prepare_filtered_data(walking_data, jumping_data):
-    walking_data['label'] = 'walking'
-    jumping_data['label'] = 'jumping'
-    return pd.concat([walking_data, jumping_data], axis=0)
-
-f = h5py.File('data.h5', 'r')
-
-# Load the walking and jumping data from CSV files
-train_walking_data = f[f'dataset/Train/Walking']
-train_jumping_data = f[f'dataset/Train/Jumping']
-test_walking_data = f[f'dataset/Test/Walking']
-test_jumping_data = f[f'dataset/Test/Jumping']
-
-# Filter the walking and jumping data using the data_filter function with a specified window size
-window_size = 5
-walking_filtered_train = data_filter(train_walking_data, window_size)
-jumping_filtered_train = data_filter(train_jumping_data, window_size)
-walking_filtered_test = data_filter(test_walking_data, window_size)
-jumping_filtered_test = data_filter(test_jumping_data, window_size)
-
-filtered_train_df = prepare_filtered_data(pd.DataFrame(walking_filtered_train.reshape(-1, 4)),
+filtered_train_df = prepare_filtered_data_train(pd.DataFrame(walking_filtered_train.reshape(-1, 4)),
                                     pd.DataFrame(jumping_filtered_train.reshape(-1, 4)))
 filtered_train_df.to_csv(f'filtered_data_train.csv', index=False)
 
-filtered_train_df = prepare_filtered_data(pd.DataFrame(walking_filtered_test.reshape(-1, 4)),
+filtered_train_df = prepare_filtered_data_test(pd.DataFrame(walking_filtered_test.reshape(-1, 4)),
                                     pd.DataFrame(jumping_filtered_test.reshape(-1, 4)))
 filtered_train_df.to_csv(f'filtered_data_test.csv', index=False)
